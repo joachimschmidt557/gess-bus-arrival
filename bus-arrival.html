@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <link rel=stylesheet href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css">
+        
+        <script src="https://code.jquery.com/jquery-3.3.1.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
+        
+        <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js" integrity="sha384-ChfqqxuZUCnJSK3+MXmPNIyE6ZbWh2IMqE241rYiqJxyMiZ6OW/JmZQ5stwEULTy" crossorigin="anonymous"></script>
+        
+        <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.2.0/css/all.css" integrity="sha384-hWVjflwFxL6sNzntih27bfxkr27PmbbK/iSvJ+a4+0owXq79v+lsFkW54bOGbiDQ" crossorigin="anonymous">
+        
+        <meta charset="utf-8">
+        
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        
+        <script>
+            
+            // Variables
+            // Direction: Hillview
+            var direction1_next_bus_arr_time = "";
+            var direction1_next_bus_arr_load = "";
+            
+            var direction1_subseq_bus_arr_time = "";
+            var direction1_subseq_bus_arr_load = "";
+            
+            // Direction: Bt Panjang
+            var direction2_next_bus_arr_time = "";
+            var direction2_next_bus_arr_load = "";
+            
+            var direction2_subseq_bus_arr_time = "";
+            var direction2_subseq_bus_arr_load = "";
+            
+            // This function gets all the newest information
+            function refreshTimings()
+            {
+                // Bus stop 43969 (to Hillview)
+                var json_request_direction_3 = $.getJSON("https://arrivelah.herokuapp.com/?id=43969", function ( data ) {
+                    // Direction: Hillview
+                    // Get arrival time of next bus
+                    direction1_next_bus_arr_time = data["services"][0]["next"]["time"];
+                    direction1_next_bus_arr_load = data["services"][0]["next"]["load"];
+                    
+                    // Get arrival time of the bus after that
+                    direction1_subseq_bus_arr_time = data["services"][0]["subsequent"]["time"];
+                    direction1_subseq_bus_arr_load = data["services"][0]["subsequent"]["load"];
+                });
+
+                // Bus stop 43961 (to Bt Panjang)
+                var json_request_direction_2 = $.getJSON("https://arrivelah.herokuapp.com/?id=43961", function ( data ) {
+                    // Direction: Hillview
+                    // Get arrival time of next bus
+                    direction2_next_bus_arr_time = data["services"][0]["next"]["time"];
+                    direction2_next_bus_arr_load = data["services"][0]["next"]["load"];
+                    
+                    // Get arrival time of the bus after that
+                    direction2_subseq_bus_arr_time = data["services"][0]["subsequent"]["time"];
+                    direction2_subseq_bus_arr_load = data["services"][0]["subsequent"]["load"];
+                });
+            }
+            
+            function refreshCountdown(arr_time, arr_load, element_id)
+            {
+                
+                var time_in_future = new Date(arr_time).getTime();
+                var time_now = new Date().getTime();
+                var time_left = time_in_future - time_now;
+                
+                var minutes = Math.floor((time_left % (1000 * 60 * 60)) / (1000 * 60));
+                var seconds = Math.floor((time_left % (1000 * 60)) / 1000);
+                    
+                if (time_left < 60000)
+                {
+                    $(element_id).html('<span class="text-danger">' + "Arr" + "</span>");
+                }
+                else if (time_left < 180000)
+                {
+                    $(element_id).html('<span class="text-danger">' + minutes + ' mins</span>');
+                }
+                else
+                {
+                    $(element_id).html(minutes + " mins");
+                }
+                
+                if (arr_load == "SEA")
+                {
+                    $(element_id).css("text-decoration-color", "green");
+                }
+                else if (arr_load == "SDA")
+                {
+                    $(element_id).css("text-decoration-color", "orange");
+                }
+                else
+                {
+                    $(element_id).css("text-decoration-color", "red");
+                }
+                
+            }
+            
+            // Initialize
+            $(document).ready(function(){
+                // Before doing anything, get the newest arrival timings
+                // and information
+                refreshTimings();
+                
+                // Set an interval for each function to run
+                // Countdowns run every second, new timings get queried every 10
+                // seconds
+                window.setInterval(function() {
+                    refreshCountdown(direction1_next_bus_arr_time, direction1_next_bus_arr_load, "#direction1-next-arrival-time");
+                }, 1000)
+                window.setInterval(function() {
+                    refreshCountdown(direction1_subseq_bus_arr_time, direction1_subseq_bus_arr_load, "#direction1-subseq-arrival-time");
+                }, 1000)
+                window.setInterval(function() {
+                    refreshCountdown(direction2_next_bus_arr_time, direction2_next_bus_arr_load, "#direction2-next-arrival-time");
+                }, 1000)
+                window.setInterval(function() {
+                    refreshCountdown(direction2_subseq_bus_arr_time, direction2_subseq_bus_arr_load, "#direction2-subseq-arrival-time");
+                }, 1000)
+                window.setInterval(refreshTimings, 10000);
+                
+            });
+            
+        </script>
+    </head>
+    <body>
+        <div class="container">
+            
+            <div class="row">
+                <div class="col-lg-6">
+                   <h1>973 <i class="fas fa-bus"></i> &nbsp; <i class="fas fa-arrow-right"></i> &nbsp; Hillview <i class="fas fa-subway"></i></h1>
+                    <div class="jumbotron">
+                        <h1>
+                            <span id="direction1-next-arrival-time" style="text-decoration: underline;text-decoration-color: red;">Loading...</span>
+                        </h1>
+                        <span id="direction1-subseq-arrival-time" style="text-decoration: underline;text-decoration-color: red;">Loading...</span>
+                    </div>
+                </div>
+                <div class="col-lg-6">
+                    <h1>973 <i class="fas fa-bus"></i> &nbsp; <i class="fas fa-arrow-right"></i> &nbsp; Bt Panjang <i class="fas fa-subway"></i></h1>
+                    <div class="jumbotron">
+                        <h1>
+                            <span id="direction2-next-arrival-time" style="text-decoration: underline;text-decoration-color: red;">Loading...</span>
+                        </h1>
+                    <span id="direction2-subseq-arrival-time" style="text-decoration: underline;text-decoration-color: red;">Loading...</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </body>
+</html>
