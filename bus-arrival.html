@@ -108,12 +108,27 @@
             function getTemperature()
             {
                 $.getJSON("https://api.data.gov.sg/v1/environment/air-temperature", function ( data ) {
-                  var current_temperature = JSON.stringify(data.items[0].readings[0].value) +"&#8451";
-                  current_temperature = current_temperature.replace(/^"(.*)"$/, '$1');
-                  document.getElementById("temp_data").innerHTML = (current_temperature);
+                    var current_temperature = JSON.stringify(data.items[0].readings[0].value) +"&#8451";
+                    current_temperature = current_temperature.replace(/^"(.*)"$/, '$1');
+                    document.getElementById("temp_data").innerHTML = (current_temperature);
                 })
             }
 
+            function getPSI()
+            {
+                $.getJSON("https://api.data.gov.sg/v1/environment/psi", function ( data ){
+                    var current_24psi = JSON.stringify(data.items[0].readings.psi_twenty_four_hourly.west);
+                    document.getElementById("psi24").innerHTML = "24h PSI: " + current_24psi;
+                })
+            }
+
+            function getPM25()
+            {
+                $.getJSON("https://api.data.gov.sg/v1/environment/pm25", function ( data ){
+                    var current_1pm25 = JSON.stringify(data.items[0].readings.pm25_one_hourly.west);
+                    document.getElementById("pm25").innerHTML = "1H PM2,5:" + "  " + current_1pm25;
+                })
+            }
 
             // Initialize
             $(document).ready(function(){
@@ -139,6 +154,8 @@
                 window.setInterval(refreshTimings, 10000);
                 getWeather();
                 getTemperature();
+                getPSI();
+                getPM25();
 
             });
 
@@ -172,6 +189,12 @@
                     <h1 id="Weather">Weather</h1>
                     <h2 id="Weather_data">Loading...</h2>
                     <h2 id="temp_data" display:inline>Loading...</h2>
+                </div>
+                <div class="col-lg-6">
+                    <h1>PSI readings</h1>
+                    <h2 id="psi24">24h National PSI: Loading...</font>
+                    <h2 id="pm25">1h PM 2.5 data: Loading...</h2>
+
                 </div>
             </div>
         </div>
