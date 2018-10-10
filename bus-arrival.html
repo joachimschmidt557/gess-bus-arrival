@@ -2,34 +2,34 @@
 <html>
     <head>
         <link rel=stylesheet href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css">
-        
+
         <script src="https://code.jquery.com/jquery-3.3.1.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
-        
+
         <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js" integrity="sha384-ChfqqxuZUCnJSK3+MXmPNIyE6ZbWh2IMqE241rYiqJxyMiZ6OW/JmZQ5stwEULTy" crossorigin="anonymous"></script>
-        
+
         <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.2.0/css/all.css" integrity="sha384-hWVjflwFxL6sNzntih27bfxkr27PmbbK/iSvJ+a4+0owXq79v+lsFkW54bOGbiDQ" crossorigin="anonymous">
-        
+
         <meta charset="utf-8">
-        
+
         <meta name="viewport" content="width=device-width, initial-scale=1">
-        
+
         <script>
-            
+
             // Variables
             // Direction: Hillview
             var direction1_next_bus_arr_time = "";
             var direction1_next_bus_arr_load = "";
-            
+
             var direction1_subseq_bus_arr_time = "";
             var direction1_subseq_bus_arr_load = "";
-            
+
             // Direction: Bt Panjang
             var direction2_next_bus_arr_time = "";
             var direction2_next_bus_arr_load = "";
-            
+
             var direction2_subseq_bus_arr_time = "";
             var direction2_subseq_bus_arr_load = "";
-            
+
             // This function gets all the newest information
             function refreshTimings()
             {
@@ -39,7 +39,7 @@
                     // Get arrival time of next bus
                     direction1_next_bus_arr_time = data["services"][0]["next"]["time"];
                     direction1_next_bus_arr_load = data["services"][0]["next"]["load"];
-                    
+
                     // Get arrival time of the bus after that
                     direction1_subseq_bus_arr_time = data["services"][0]["subsequent"]["time"];
                     direction1_subseq_bus_arr_load = data["services"][0]["subsequent"]["load"];
@@ -51,23 +51,23 @@
                     // Get arrival time of next bus
                     direction2_next_bus_arr_time = data["services"][0]["next"]["time"];
                     direction2_next_bus_arr_load = data["services"][0]["next"]["load"];
-                    
+
                     // Get arrival time of the bus after that
                     direction2_subseq_bus_arr_time = data["services"][0]["subsequent"]["time"];
                     direction2_subseq_bus_arr_load = data["services"][0]["subsequent"]["load"];
                 });
             }
-            
+
             function refreshCountdown(arr_time, arr_load, element_id)
             {
-                
+
                 var time_in_future = new Date(arr_time).getTime();
                 var time_now = new Date().getTime();
                 var time_left = time_in_future - time_now;
-                
+
                 var minutes = Math.floor((time_left % (1000 * 60 * 60)) / (1000 * 60));
                 var seconds = Math.floor((time_left % (1000 * 60)) / 1000);
-                    
+
                 if (time_left < 60000)
                 {
                     $(element_id).html('<span class="text-danger">' + "Arr" + "</span>");
@@ -80,7 +80,7 @@
                 {
                     $(element_id).html(minutes + " mins");
                 }
-                
+
                 if (arr_load == "SEA")
                 {
                     $(element_id).css("text-decoration-color", "green");
@@ -93,15 +93,49 @@
                 {
                     $(element_id).css("text-decoration-color", "red");
                 }
-                
+
             }
-            
+
+            function getWeather()
+            {
+                $.getJSON("https://api.data.gov.sg/v1/environment/2-hour-weather-forecast", function ( data ) {
+                    var weather_bukit_panjang = JSON.stringify(data.items[0].forecasts[6].forecast);
+                    weather_bukit_panjang = weather_bukit_panjang.replace(/^"(.*)"$/, '$1');
+                    document.getElementById("Weather_data").innerHTML = (weather_bukit_panjang);
+                  })
+            }
+
+            function getTemperature()
+            {
+                $.getJSON("https://api.data.gov.sg/v1/environment/air-temperature", function ( data ) {
+                    var current_temperature = JSON.stringify(data.items[0].readings[0].value) +"&#8451";
+                    current_temperature = current_temperature.replace(/^"(.*)"$/, '$1');
+                    document.getElementById("temp_data").innerHTML = (current_temperature);
+                })
+            }
+
+            function getPSI()
+            {
+                $.getJSON("https://api.data.gov.sg/v1/environment/psi", function ( data ){
+                    var current_24psi = JSON.stringify(data.items[0].readings.psi_twenty_four_hourly.west);
+                    document.getElementById("psi24").innerHTML = "24h PSI: " + current_24psi;
+                })
+            }
+
+            function getPM25()
+            {
+                $.getJSON("https://api.data.gov.sg/v1/environment/pm25", function ( data ){
+                    var current_1pm25 = JSON.stringify(data.items[0].readings.pm25_one_hourly.west);
+                    document.getElementById("pm25").innerHTML = "1H PM2,5:" + "  " + current_1pm25;
+                })
+            }
+
             // Initialize
             $(document).ready(function(){
                 // Before doing anything, get the newest arrival timings
                 // and information
                 refreshTimings();
-                
+
                 // Set an interval for each function to run
                 // Countdowns run every second, new timings get queried every 10
                 // seconds
@@ -118,14 +152,18 @@
                     refreshCountdown(direction2_subseq_bus_arr_time, direction2_subseq_bus_arr_load, "#direction2-subseq-arrival-time");
                 }, 1000)
                 window.setInterval(refreshTimings, 10000);
-                
+                getWeather();
+                getTemperature();
+                getPSI();
+                getPM25();
+
             });
-            
+
         </script>
     </head>
     <body>
         <div class="container">
-            
+
             <div class="row">
                 <div class="col-lg-6">
                    <h1>973 <i class="fas fa-bus"></i> &nbsp; <i class="fas fa-arrow-right"></i> &nbsp; Hillview <i class="fas fa-subway"></i></h1>
@@ -144,6 +182,19 @@
                         </h1>
                     <span id="direction2-subseq-arrival-time" style="text-decoration: underline;text-decoration-color: red;">Loading...</span>
                     </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-lg-6">
+                    <h1 id="Weather">Weather</h1>
+                    <h2 id="Weather_data">Loading...</h2>
+                    <h2 id="temp_data" display:inline>Loading...</h2>
+                </div>
+                <div class="col-lg-6">
+                    <h1>PSI readings</h1>
+                    <h2 id="psi24">24h National PSI: Loading...</font>
+                    <h2 id="pm25">1h PM 2.5 data: Loading...</h2>
+
                 </div>
             </div>
         </div>
